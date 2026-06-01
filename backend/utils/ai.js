@@ -40,7 +40,7 @@ const getMockNextInteraction = (messages) => {
 
 const getMockEvaluation = () => {
   return {
-    scores: { accuracy: 85, clarity: 80, depth: 75, relevance: 90, timeManagement: 88, finalReadiness: 83 },
+    scores: { accuracy: 8.5, clarity: 8.0, depth: 7.5, relevance: 9.0, timeManagement: 8.8, finalReadiness: 41.8 },
     feedback: "Solid foundation, but needs more depth.",
     strengths: ["Clear communication"],
     weaknesses: ["Lacks depth"]
