@@ -15,7 +15,7 @@
 
 > 🔬 **Hackathon Evaluators:** Click the link below to watch the comprehensive screen-recorded walkthrough of our platform, highlighting our technical architecture, user flows, and real-time AI mock interview progression.
 
-👉 **[WATCH THE GOOGLE DRIVE VIDEO DEMONSTRATION HERE](PASTE_YOUR_GOOGLE_DRIVE_LINK_HERE)** 🎬
+👉 **[WATCH THE GOOGLE DRIVE VIDEO DEMONSTRATION HERE](https://drive.google.com/file/d/1Ub2wwk6c9EHaWp-6syYGSL7yA6CMC4T5/view?usp=sharing)** 🎬
 
 ---
 
