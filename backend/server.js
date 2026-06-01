@@ -4,7 +4,14 @@ require('dotenv').config({ override: true });
 const admin = require('firebase-admin');
 
 // Initialize Firebase Admin
-const serviceAccount = require('./firebase-service-account.json');
+let serviceAccount;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+} else {
+  // Fallback for local development
+  serviceAccount = require('./firebase-service-account.json');
+}
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
