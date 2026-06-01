@@ -12,17 +12,30 @@ if (process.env.GROQ_API_KEY) {
 const getMockNextInteraction = (messages) => {
   const userMessagesCount = messages.filter(m => m.role === 'user').length;
   
+  let question = "That makes sense. Could you elaborate more on your previous experience with those technologies?";
+  let isCodeRequired = false;
+  let isInterviewEnded = false;
+
   if (userMessagesCount === 0) {
-    return "Welcome to the interview! Could you start by briefly introducing yourself?";
+    question = "Welcome to the interview! Could you start by briefly introducing yourself?";
   } else if (userMessagesCount === 1) {
-    return "That's an interesting approach. Could you write a quick function to demonstrate that? [CODE_REQUIRED]";
+    question = "That's an interesting approach. Could you write a quick function to demonstrate that?";
+    isCodeRequired = true;
   } else if (userMessagesCount === 2) {
-    return "Excellent. Let's talk about performance. How would you optimize that code?";
+    question = "Excellent. Let's talk about performance. How would you optimize that code?";
   } else if (userMessagesCount >= 4) {
-    return "Thank you for your time today. That concludes our technical interview! [END_INTERVIEW]";
+    question = "Thank you for your time today. That concludes our technical interview!";
+    isInterviewEnded = true;
   }
   
-  return "That makes sense. Could you elaborate more on your previous experience with those technologies?";
+  return JSON.stringify({
+    evaluation: "Good response.",
+    question,
+    difficulty: 2,
+    score: 75,
+    isCodeRequired,
+    isInterviewEnded
+  });
 };
 
 const getMockEvaluation = () => {
