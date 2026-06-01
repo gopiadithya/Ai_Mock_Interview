@@ -17,8 +17,12 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
   const [showCodeEditor, setShowCodeEditor] = useState(false);
   const [codeContent, setCodeContent] = useState('');
   
-  const currentQStartTime = useRef(Date.now());
+  const currentQStartTime = useRef(0);
   const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    currentQStartTime.current = Date.now();
+  }, []);
 
   // Global Elapsed Timer
   useEffect(() => {
@@ -34,6 +38,72 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
     setToast(msg);
     setTimeout(() => setToast(''), 4000);
   };
+
+  const sendResponse = async (text, code) => {
+    setTranscript('');
+    setShowCodeEditor(false); // Hide until AI asks again
+    setCodeContent('');
+    
+    const duration = (Date.now() - currentQStartTime.current) / 1000;
+    
+    let displayContent = text;
+    if (code) displayContent += `\n\n[Code Submitted]`;
+    setMessages(prev => [...prev, { role: 'user', content: displayContent }]);
+    
+    setLoading(true);
+
+    try {
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await axios.post(`${API_BASE}/api/interview/${interviewId}/chat`, {
+        content: text || "I have submitted the code.",
+        duration,
+        totalElapsedTime: elapsedTime,
+        codeSnippet: code || null
+      });
+      
+      if (res.data.success) {
+        if (res.data.isInterviewEnded) {
+          onFinish();
+          return;
+        }
+        
+        setMessages(prev => [...prev, { role: 'assistant', content: res.data.reply, displayContent: res.data.displayQuestion }]);
+        setDifficulty(res.data.difficulty);
+        
+        if (res.data.isCodeRequired) {
+          setShowCodeEditor(true);
+        }
+        
+        currentQStartTime.current = Date.now();
+        speakText(res.data.reply, res.data.displayQuestion);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    setLoading(false);
+  };
+
+  const toggleMic = React.useCallback(() => {
+    if (!recognitionRef.current) {
+      alert("Your browser does not support Speech Recognition. Please use Chrome.");
+      return;
+    }
+    
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      if (transcript.trim() || codeContent.trim()) {
+        sendResponse(transcript, codeContent);
+      }
+    } else {
+      setTranscript('');
+      setTimeLeft(90); // Reset timer if manually toggling on
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  }, [isListening, transcript, codeContent]);
 
   // Strict 90-second Countdown Timer
   useEffect(() => {
@@ -147,7 +217,8 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
   useEffect(() => {
     const startInterview = async () => {
       try {
-        const res = await axios.post(`http://localhost:5000/api/interview/${interviewId}/start`);
+        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await axios.post(`${API_BASE}/api/interview/${interviewId}/start`);
         if (res.data.success) {
           setMessages([{ role: 'assistant', content: res.data.message, displayContent: res.data.message }]);
           setDifficulty(res.data.difficulty);
@@ -167,71 +238,6 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
     };
   }, [interviewId]);
 
-  const sendResponse = async (text, code) => {
-    setTranscript('');
-    setShowCodeEditor(false); // Hide until AI asks again
-    setCodeContent('');
-    
-    const duration = (Date.now() - currentQStartTime.current) / 1000;
-    
-    let displayContent = text;
-    if (code) displayContent += `\n\n[Code Submitted]`;
-    setMessages(prev => [...prev, { role: 'user', content: displayContent }]);
-    
-    setLoading(true);
-
-    try {
-      const res = await axios.post(`http://localhost:5000/api/interview/${interviewId}/chat`, {
-        content: text || "I have submitted the code.",
-        duration,
-        totalElapsedTime: elapsedTime,
-        codeSnippet: code || null
-      });
-      
-      if (res.data.success) {
-        if (res.data.isInterviewEnded) {
-          onFinish();
-          return;
-        }
-        
-        setMessages(prev => [...prev, { role: 'assistant', content: res.data.reply, displayContent: res.data.displayQuestion }]);
-        setDifficulty(res.data.difficulty);
-        
-        if (res.data.isCodeRequired) {
-          setShowCodeEditor(true);
-        }
-        
-        currentQStartTime.current = Date.now();
-        speakText(res.data.reply, res.data.displayQuestion);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-    setLoading(false);
-  };
-
-  const toggleMic = React.useCallback(() => {
-    if (!recognitionRef.current) {
-      alert("Your browser does not support Speech Recognition. Please use Chrome.");
-      return;
-    }
-    
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-      if (transcript.trim() || codeContent.trim()) {
-        sendResponse(transcript, codeContent);
-      }
-    } else {
-      setTranscript('');
-      setTimeLeft(90); // Reset timer if manually toggling on
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      recognitionRef.current.start();
-      setIsListening(true);
-    }
-  }, [isListening, transcript, codeContent]);
-
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
@@ -241,15 +247,12 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
   const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant');
 
   // Generate random values once
-  const [floatingSymbols, setFloatingSymbols] = useState([]);
-  useEffect(() => {
-    setFloatingSymbols([...Array(15)].map(() => ({
-      left: `${Math.random() * 100}%`,
-      delay: `${Math.random() * 20}s`,
-      duration: `${15 + Math.random() * 10}s`,
-      symbol: ['{ }', '< >', '()', ';;', '=>', '[]', '/*'][Math.floor(Math.random() * 7)]
-    })));
-  }, []);
+  const [floatingSymbols] = useState(() => [...Array(15)].map(() => ({
+    left: `${Math.random() * 100}%`,
+    delay: `${Math.random() * 20}s`,
+    duration: `${15 + Math.random() * 10}s`,
+    symbol: ['{ }', '< >', '()', ';;', '=>', '[]', '/*'][Math.floor(Math.random() * 7)]
+  })));
 
   return (
     <div className="glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', padding: 0 }}>
@@ -321,7 +324,7 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
                 <div className="typing-dots" style={{ transform: 'scale(1.2)' }}>
                   <span></span><span></span><span></span>
                 </div>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', margin: 0 }}>Nova is analyzing...</p>
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Nova is analyzing...</span>
               </div>
             ) : (
               <h2 style={{ 
@@ -372,6 +375,23 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
 
       <div style={{ display: 'flex', justifyContent: 'center', gap: '32px', padding: '24px', zIndex: 1, background: 'rgba(13, 17, 23, 0.4)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <button 
+          onClick={() => setShowCodeEditor(!showCodeEditor)}
+          style={{ 
+            width: '60px', height: '60px', borderRadius: '50%', 
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
+            background: showCodeEditor ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
+            border: 'none',
+            color: '#fff', padding: 0,
+            boxShadow: showCodeEditor ? '0 4px 20px rgba(59,130,246,0.4)' : '0 4px 20px rgba(0,0,0,0.3)',
+            transition: 'all 0.3s ease',
+            alignSelf: 'center'
+          }}
+          title="Toggle Code Editor"
+        >
+          <Code size={24} color={showCodeEditor ? "#fff" : "var(--accent-primary)"} />
+        </button>
+
+        <button 
           onClick={toggleMic}
           disabled={loading}
           style={{ 
@@ -391,16 +411,18 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
         <button 
           onClick={onFinish}
           style={{ 
-            width: '80px', height: '80px', borderRadius: '50%', 
+            width: '60px', height: '60px', borderRadius: '50%', 
             display: 'flex', justifyContent: 'center', alignItems: 'center',
             background: 'var(--error-color)',
             border: 'none',
             color: '#fff', padding: 0,
             boxShadow: '0 4px 20px rgba(248, 81, 73, 0.4)',
-            transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            transition: 'all 0.3s ease',
+            alignSelf: 'center'
           }}
+          title="End Interview"
         >
-          <PhoneOff size={32} />
+          <PhoneOff size={24} />
         </button>
       </div>
     </div>

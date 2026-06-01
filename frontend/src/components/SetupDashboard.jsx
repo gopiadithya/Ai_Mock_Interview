@@ -51,7 +51,8 @@ const SetupDashboard = ({ onSetupComplete }) => {
     submitData.append('resumeFile', resumeFile);
 
     try {
-      const res = await axios.post('http://localhost:5000/api/interview/setup', submitData, {
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await axios.post(`${API_BASE}/api/interview/setup`, submitData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       if (res.data.success) {
@@ -173,8 +174,8 @@ const SetupDashboard = ({ onSetupComplete }) => {
         <User size={28} color="var(--accent-primary)" />
         Candidate Setup
       </h2>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', textAlign: 'center' }}>
-        Provide your details and the target job description to configure Nova.
+      <p style={{ color: '#a1a1aa', marginTop: '8px', marginBottom: '32px', textAlign: 'center' }}>
+        Provide your details and the target job description to configure Nova AI.
       </p>
 
       <form onSubmit={handleSubmit}>

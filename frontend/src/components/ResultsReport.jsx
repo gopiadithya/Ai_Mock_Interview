@@ -48,7 +48,8 @@ const ResultsReport = ({ interviewId }) => {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const res = await axios.post(`http://localhost:5000/api/interview/${interviewId}/evaluate`);
+        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await axios.post(`${API_BASE}/api/interview/${interviewId}/evaluate`);
         if (res.data.success) {
           setReport(res.data.evaluation);
         }
