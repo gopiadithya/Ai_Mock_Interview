@@ -76,6 +76,7 @@ exports.setupInterview = async (req, res) => {
     // --- END HYBRID VALIDATION ---
 
     const profileAnalysis = await analyzeProfile(resumeText, jobDescription);
+    profileAnalysis.projects = profileAnalysis.projects || [];
     const extractedSkills = profileAnalysis.skills || profileAnalysis.matchedSkills || ["JavaScript"];
 
     const interviewData = {
@@ -196,13 +197,38 @@ exports.chat = async (req, res) => {
     }, allMessages, currentDiff);
 
     let parsedAi = {};
-    try {
-      parsedAi = JSON.parse(aiResponseText);
-    } catch (e) {
-      console.error("Failed to parse AI JSON:", e);
+    let isParsedSuccessful = false;
+    
+    // Clean up aiResponseText from markdown wrapper syntax and any extra horizontal rules
+    let cleanedResponse = aiResponseText.trim();
+    if (cleanedResponse.startsWith('```')) {
+      cleanedResponse = cleanedResponse.replace(/^```(json)?/, '').replace(/```$/, '').trim();
+    }
+    
+    // Extract everything between the first '{' and the last '}'
+    const firstBrace = cleanedResponse.indexOf('{');
+    const lastBrace = cleanedResponse.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      const jsonCandidate = cleanedResponse.slice(firstBrace, lastBrace + 1);
+      try {
+        parsedAi = JSON.parse(jsonCandidate);
+        isParsedSuccessful = true;
+      } catch (e) {
+        console.error("Failed to parse extracted AI JSON:", e);
+      }
+    }
+    
+    if (!isParsedSuccessful) {
+      // Scrub horizontal rules, backticks and markdown block syntax from the fallback text
+      let cleanText = aiResponseText
+        .replace(/```[a-z]*/g, '')
+        .replace(/---/g, '')
+        .replace(/`/g, '')
+        .trim();
+      
       parsedAi = {
         evaluation: "Thank you for your answer.",
-        question: aiResponseText,
+        question: cleanText,
         difficulty: currentDiff,
         score: 50,
         isCodeRequired: false,

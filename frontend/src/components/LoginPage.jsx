@@ -6,7 +6,8 @@ import {
   createUserWithEmailAndPassword, 
   signInWithPopup, 
   updateProfile,
-  sendEmailVerification
+  sendEmailVerification,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 
 const LoginPage = ({ onLogin }) => {
@@ -70,6 +71,26 @@ const LoginPage = ({ onLogin }) => {
     } catch (err) {
       console.error(err);
       setError(err.message.replace('Firebase: ', ''));
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      setError('Please enter your email address first so we can send a password reset link.');
+      setSuccessMsg('');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setSuccessMsg('');
+    try {
+      await sendPasswordResetEmail(auth, formData.email);
+      setSuccessMsg('Password reset link sent! Please check your email inbox.');
+    } catch (err) {
+      console.error(err);
+      setError(err.message.replace('Firebase: ', ''));
+    } finally {
       setLoading(false);
     }
   };
@@ -218,7 +239,12 @@ const LoginPage = ({ onLogin }) => {
           </button>
 
           {isLogin && (
-            <p style={{ marginTop: '32px', color: '#a1a1aa', fontSize: '13px', cursor: 'pointer', textAlign: 'center', transition: 'color 0.2s ease' }} onMouseOver={(e) => e.target.style.color='#fff'} onMouseOut={(e) => e.target.style.color='#a1a1aa'}>
+            <p 
+              onClick={handleForgotPassword}
+              style={{ marginTop: '32px', color: '#a1a1aa', fontSize: '13px', cursor: 'pointer', textAlign: 'center', transition: 'color 0.2s ease' }} 
+              onMouseOver={(e) => e.target.style.color='#fff'} 
+              onMouseOut={(e) => e.target.style.color='#a1a1aa'}
+            >
               Forgot your password?
             </p>
           )}

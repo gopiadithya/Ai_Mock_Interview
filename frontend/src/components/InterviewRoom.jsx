@@ -318,7 +318,7 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
         
         {/* Left Side: Voice Assistant */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '20px', textAlign: 'center', transition: 'all 0.4s ease' }}>
-          <div style={{ background: 'rgba(0,0,0,0.4)', padding: '32px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', maxWidth: '700px', width: '100%', minHeight: '150px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
+          <div style={{ background: 'transparent', padding: '32px', border: 'none', maxWidth: '700px', width: '100%', minHeight: '150px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: 'none' }}>
             {loading ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
                 <div className="typing-dots" style={{ transform: 'scale(1.2)' }}>

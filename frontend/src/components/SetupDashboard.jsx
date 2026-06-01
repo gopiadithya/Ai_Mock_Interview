@@ -71,7 +71,7 @@ const SetupDashboard = ({ onSetupComplete }) => {
   };
 
   if (analysisResult) {
-    const { matchedSkills = [], missingSkills = [], matchPercentage = 0, interviewId } = analysisResult;
+    const { matchedSkills = [], missingSkills = [], matchPercentage = 0, projects = [], interviewId } = analysisResult;
     
     // Determine color based on match percentage
     let strokeColor = 'var(--accent-primary)';
@@ -144,6 +144,33 @@ const SetupDashboard = ({ onSetupComplete }) => {
                 )) : <span style={{ color: 'var(--text-secondary)' }}>You meet all listed skill requirements!</span>}
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Extracted Projects Section */}
+        <div style={{ marginTop: '16px', marginBottom: '32px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '24px' }}>
+          <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#60a5fa', marginBottom: '16px', fontSize: '1.1rem' }}>
+            <FileText size={18} /> Extracted Projects
+          </h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {projects.length > 0 ? projects.map((project, i) => (
+              <div key={i} style={{ 
+                padding: '14px 20px', 
+                background: 'rgba(59, 130, 246, 0.08)', 
+                border: '1px solid rgba(59, 130, 246, 0.2)', 
+                borderRadius: '12px', 
+                fontSize: '0.95rem',
+                color: '#e2e8f0',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <span style={{ minWidth: '8px', height: '8px', background: '#3b82f6', borderRadius: '50%', display: 'inline-block', flexShrink: 0 }}></span>
+                <span style={{ lineHeight: '1.4' }}>{project}</span>
+              </div>
+            )) : (
+              <span style={{ color: 'var(--text-secondary)' }}>No specific projects extracted from the resume.</span>
+            )}
           </div>
         </div>
 

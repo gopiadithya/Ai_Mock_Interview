@@ -52,7 +52,11 @@ const analyzeProfile = async (resume, jd) => {
     matchedSkills: ["JavaScript", "React", "Node.js"],
     missingSkills: ["System Design", "Cloud"],
     matchPercentage: 65,
-    skills: ["JavaScript", "React", "Node.js"]
+    skills: ["JavaScript", "React", "Node.js"],
+    projects: [
+      "E-Commerce Platform: Built using React and Node.js with payment gateway integration.",
+      "Weather Dashboard: Developed a real-time weather tracking application."
+    ]
   };
   
   if (!openai) {
@@ -60,16 +64,17 @@ const analyzeProfile = async (resume, jd) => {
   }
 
   try {
-    // Extract Exact Skills and Match Percentage using LLM (Extremely Fast)
+    // Extract Exact Skills, Match Percentage, and Projects using LLM (Extremely Fast)
     const prompt = `Analyze the following resume and job description.
 CRITICAL RULE: You MUST ONLY extract skills that are EXPLICITLY MENTIONED in the Resume. Do not guess skills.
-Compare those exact resume skills against the JD requirements.
+Compare those exact resume skills against the JD requirements. Also, extract all key projects listed in the resume.
 
 Return a STRICTLY VALID JSON object with this exact schema:
 {
   "matchedSkills": ["array of skills present in BOTH the resume and JD"],
   "missingSkills": ["array of skills required by JD but MISSING from resume"],
   "skills": ["array of ALL technical and soft skills actually found in the resume"],
+  "projects": ["array of projects found in the resume. Each project should be a clean string, ideally with title and 1-sentence description if available. If no projects are found, return an empty array."],
   "matchPercentage": 75
 }
 
