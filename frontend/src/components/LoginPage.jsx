@@ -1,32 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Mail, UserCircle, Phone, PhoneCall } from 'lucide-react';
+import { Lock, Mail, UserCircle } from 'lucide-react';
 import { auth, googleProvider } from '../firebase';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signInWithPopup, 
   updateProfile,
-  sendEmailVerification,
-  RecaptchaVerifier,
-  signInWithPhoneNumber
+  sendEmailVerification
 } from 'firebase/auth';
 
 const LoginPage = ({ onLogin }) => {
-  const [authMethod, setAuthMethod] = useState('email'); // 'email' or 'phone'
   const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({ email: '', password: '', name: '', phoneNumber: '', otp: '' });
+  const [formData, setFormData] = useState({ email: '', password: '', name: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [showOTPInput, setShowOTPInput] = useState(false);
-
-  useEffect(() => {
-    // Clear recaptcha if switching methods
-    if (authMethod !== 'phone' && window.recaptchaVerifier) {
-      window.recaptchaVerifier.clear();
-      window.recaptchaVerifier = null;
-    }
-  }, [authMethod]);
 
   const handleSubmitEmail = async (e) => {
     e.preventDefault();
@@ -71,74 +59,7 @@ const LoginPage = ({ onLogin }) => {
     }
   };
 
-  const setupRecaptcha = () => {
-    if (window.recaptchaVerifier) {
-      try {
-        window.recaptchaVerifier.clear();
-      } catch (e) {
-        console.warn('Failed to clear recaptcha', e);
-      }
-      window.recaptchaVerifier = null;
-    }
 
-    // Forcefully recreate the container to ensure Firebase sees a fresh DOM element
-    const wrapper = document.getElementById('recaptcha-wrapper');
-    if (wrapper) {
-      wrapper.innerHTML = '<div id="recaptcha-container"></div>';
-    }
-
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      'size': 'invisible'
-    });
-  };
-
-  const handleSendOtp = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccessMsg('');
-    try {
-      setupRecaptcha();
-      
-      let formattedPhone = formData.phoneNumber.replace(/\s+/g, '');
-      // Automatically prepend +91 for 10-digit Indian numbers
-      if (/^\d{10}$/.test(formattedPhone)) {
-        formattedPhone = `+91${formattedPhone}`;
-      } else if (!formattedPhone.startsWith('+')) {
-        formattedPhone = `+${formattedPhone}`;
-      }
-      
-      const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
-      window.confirmationResult = confirmationResult;
-      setShowOTPInput(true);
-      setSuccessMsg('OTP sent to your phone.');
-    } catch (err) {
-      console.error(err);
-      setError(err.message.replace('Firebase: ', ''));
-      // Firebase recaptcha widget might be broken after an error, clear it so it resets on next click
-      if (window.recaptchaVerifier) {
-        try { window.recaptchaVerifier.clear(); } catch(e){}
-        window.recaptchaVerifier = null;
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      await window.confirmationResult.confirm(formData.otp);
-      onLogin(); // Verified successfully
-    } catch (err) {
-      console.error(err);
-      setError('Invalid OTP code. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -191,8 +112,7 @@ const LoginPage = ({ onLogin }) => {
         `}
       </style>
 
-      {/* Invisible Recaptcha Wrapper */}
-      <div id="recaptcha-wrapper"></div>
+
 
       <div style={{ width: '100%', maxWidth: '420px', display: 'flex', flexDirection: 'column', gap: '24px', zIndex: 1 }}>
         
@@ -238,38 +158,6 @@ const LoginPage = ({ onLogin }) => {
             </div>
           )}
 
-          {/* Auth Method Toggle */}
-          <div style={{ display: 'flex', width: '100%', gap: '8px', marginBottom: '24px', background: 'rgba(0,0,0,0.3)', padding: '6px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <button 
-              type="button"
-              onClick={() => { setAuthMethod('email'); setError(''); setSuccessMsg(''); }}
-              style={{ 
-                flex: 1, background: authMethod === 'email' ? '#27272a' : 'transparent', 
-                color: authMethod === 'email' ? '#fff' : '#a1a1aa',
-                padding: '10px', transition: 'all 0.3s ease', borderRadius: '8px',
-                border: authMethod === 'email' ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent',
-                fontWeight: 600, fontSize: '0.9rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px'
-              }}
-            >
-              <Mail size={16}/> Email
-            </button>
-            <button 
-              type="button"
-              onClick={() => { setAuthMethod('phone'); setError(''); setSuccessMsg(''); setShowOTPInput(false); }}
-              style={{ 
-                flex: 1, background: authMethod === 'phone' ? '#27272a' : 'transparent', 
-                color: authMethod === 'phone' ? '#fff' : '#a1a1aa',
-                padding: '10px', transition: 'all 0.3s ease', borderRadius: '8px',
-                border: authMethod === 'phone' ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent',
-                fontWeight: 600, fontSize: '0.9rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px'
-              }}
-            >
-              <Phone size={16}/> Phone
-            </button>
-          </div>
-
-          {authMethod === 'email' ? (
-            <>
               {/* Login / Signup Toggle for Email */}
               <div style={{ display: 'flex', width: '100%', gap: '16px', marginBottom: '24px', justifyContent: 'center' }}>
                 <span onClick={() => { setIsLogin(true); setError(''); setSuccessMsg(''); }} style={{ cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600, color: isLogin ? '#fff' : '#71717a', borderBottom: isLogin ? '2px solid #6366f1' : '2px solid transparent', paddingBottom: '4px', transition: 'all 0.2s' }}>Log In</span>
@@ -307,46 +195,6 @@ const LoginPage = ({ onLogin }) => {
                   {loading ? 'Authenticating...' : (isLogin ? 'Sign In' : 'Create Account')}
                 </button>
               </form>
-            </>
-          ) : (
-            <>
-              {/* Phone Login Form */}
-              <form onSubmit={showOTPInput ? handleVerifyOtp : handleSendOtp} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {!showOTPInput ? (
-                  <>
-                    <p style={{ fontSize: '0.85rem', color: '#a1a1aa', margin: 0, textAlign: 'center' }}>Enter your phone number to receive a secure OTP code.</p>
-                    <div style={{ position: 'relative' }}>
-                      <PhoneCall size={18} color="#71717a" style={{ position: 'absolute', top: '14px', left: '14px' }} />
-                      <input 
-                        type="tel" className="premium-input" placeholder="98765 43210" required
-                        value={formData.phoneNumber} onChange={e => setFormData({...formData, phoneNumber: e.target.value})}
-                        style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 12px 12px 42px', fontSize: '14px', color: '#fff', outline: 'none', transition: 'all 0.2s ease', letterSpacing: '1px' }}
-                      />
-                    </div>
-                    <button type="submit" className="premium-btn" disabled={loading} style={{ marginTop: '12px', padding: '14px', width: '100%', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 600, fontSize: '15px', cursor: 'pointer', transition: 'all 0.2s ease', opacity: loading ? 0.7 : 1 }}>
-                      {loading ? 'Sending...' : 'Send OTP Code'}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <p style={{ fontSize: '0.85rem', color: '#a1a1aa', margin: 0, textAlign: 'center' }}>Enter the 6-digit code sent to {formData.phoneNumber}</p>
-                    <div style={{ position: 'relative' }}>
-                      <Lock size={18} color="#71717a" style={{ position: 'absolute', top: '14px', left: '14px' }} />
-                      <input 
-                        type="text" className="premium-input" placeholder="123456" required
-                        value={formData.otp} onChange={e => setFormData({...formData, otp: e.target.value})}
-                        style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 12px 12px 42px', fontSize: '18px', color: '#fff', outline: 'none', transition: 'all 0.2s ease', letterSpacing: '4px', textAlign: 'center' }}
-                      />
-                    </div>
-                    <button type="submit" className="premium-btn" disabled={loading} style={{ marginTop: '12px', padding: '14px', width: '100%', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: 600, fontSize: '15px', cursor: 'pointer', transition: 'all 0.2s ease', opacity: loading ? 0.7 : 1 }}>
-                      {loading ? 'Verifying...' : 'Verify & Sign In'}
-                    </button>
-                    <span onClick={() => setShowOTPInput(false)} style={{ color: '#6366f1', fontSize: '0.85rem', textAlign: 'center', cursor: 'pointer', marginTop: '8px' }}>Use a different number</span>
-                  </>
-                )}
-              </form>
-            </>
-          )}
 
           <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '16px', margin: '28px 0' }}>
             <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
@@ -369,7 +217,7 @@ const LoginPage = ({ onLogin }) => {
             Continue with Google
           </button>
 
-          {isLogin && authMethod === 'email' && (
+          {isLogin && (
             <p style={{ marginTop: '32px', color: '#a1a1aa', fontSize: '13px', cursor: 'pointer', textAlign: 'center', transition: 'color 0.2s ease' }} onMouseOver={(e) => e.target.style.color='#fff'} onMouseOut={(e) => e.target.style.color='#a1a1aa'}>
               Forgot your password?
             </p>
