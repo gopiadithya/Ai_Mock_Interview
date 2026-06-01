@@ -147,50 +147,54 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
   const [displayedCaption, setDisplayedCaption] = useState('');
 
   const speakText = (fullText, questionText) => {
+    // Sanitize fullText and questionText from any remaining dashes, backticks or weird LLM symbols
+    const sanitizedFullText = fullText.replace(/---/g, '').replace(/--/g, '').replace(/`/g, '').trim();
+    const sanitizedQuestionText = questionText ? questionText.replace(/---/g, '').replace(/--/g, '').replace(/`/g, '').trim() : '';
+
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(fullText);
+      const utterance = new SpeechSynthesisUtterance(sanitizedFullText);
       const voices = window.speechSynthesis.getVoices();
       const preferredVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google UK English Female') || v.name.includes('Zira') || v.name.includes('Samantha'));
       if (preferredVoice) utterance.voice = preferredVoice;
       
-      setDisplayedCaption('...'); // Set initial caption
+      setDisplayedCaption(''); // Set initial caption to empty (prevents displaying ... or ---)
       setIsSpeaking(true); // Set true immediately to prevent flashing the full text
       
       utterance.onstart = () => setIsSpeaking(true);
       
-      const evalLength = questionText ? (fullText.length - questionText.length) : 0;
+      const evalLength = sanitizedQuestionText ? (sanitizedFullText.length - sanitizedQuestionText.length) : 0;
       
       utterance.onboundary = (event) => {
         if (event.name === 'word') {
           if (event.charIndex >= evalLength) {
             // Nova is now speaking the question part: build it up progressively so it stays on screen
             const relativeIndex = event.charIndex - evalLength;
-            setDisplayedCaption(questionText.substring(0, relativeIndex + event.charLength));
+            setDisplayedCaption(sanitizedQuestionText.substring(0, relativeIndex + event.charLength));
           } else {
             // Nova is speaking the evaluation part: show current sentence only (removes text after spoken)
             const currentIndex = event.charIndex;
             let startIdx = 0;
             for (let i = currentIndex; i >= 0; i--) {
-              if (['.', '!', '?'].includes(fullText[i]) && i < currentIndex - 1) {
+              if (['.', '!', '?'].includes(sanitizedFullText[i]) && i < currentIndex - 1) {
                 startIdx = i + 1;
                 break;
               }
             }
             let endIdx = evalLength;
             for (let i = currentIndex; i < evalLength; i++) {
-              if (['.', '!', '?'].includes(fullText[i])) {
+              if (['.', '!', '?'].includes(sanitizedFullText[i])) {
                 endIdx = i + 1;
                 break;
               }
             }
-            setDisplayedCaption(fullText.substring(startIdx, endIdx).trim());
+            setDisplayedCaption(sanitizedFullText.substring(startIdx, endIdx).trim());
           }
         }
       };
       
       utterance.onend = () => {
-        setDisplayedCaption(questionText || fullText);
+        setDisplayedCaption(sanitizedQuestionText || sanitizedFullText);
         setIsSpeaking(false);
         // Automatically turn on microphone to listen to answer
         if (recognitionRef.current) {
