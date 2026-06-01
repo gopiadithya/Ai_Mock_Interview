@@ -1,151 +1,318 @@
-<div align="center">
-  <img src="https://img.shields.io/badge/Status-Hackathon_Submission-blue" alt="Hackathon Submission" />
-  <img src="https://img.shields.io/badge/License-MIT-green" alt="License" />
-</div>
-
-<h1 align="center">Nova AI: Next-Generation Mock Interview Platform 🚀</h1>
+# 🚀 Nova AI — Intelligent Mock Interview Platform
 
 <p align="center">
-  An advanced, state-based AI Mock Interview Platform that dynamically adapts to a candidate's resume and job description, extracts their real projects, and conducts a natural, time-bounded conversational technical evaluation.
+  <strong>AI-powered mock interviews tailored to your resume, projects, and target job role.</strong>
+</p>
+
+<p align="center">
+  Nova AI simulates realistic technical interviews using conversational AI, adaptive questioning, resume analysis, and performance analytics to help candidates prepare for real-world software engineering interviews.
 </p>
 
 ---
 
-## 🎥 Video Demonstration (Google Drive)
+## 🎥 Demo
 
-> 🔬 **Hackathon Evaluators:** Click the link below to watch the comprehensive screen-recorded walkthrough of our platform, highlighting our technical architecture, user flows, and real-time AI mock interview progression.
+### Live Platform Walkthrough
 
-👉 **[WATCH THE GOOGLE DRIVE VIDEO DEMONSTRATION HERE](https://drive.google.com/file/d/1Ub2wwk6c9EHaWp-6syYGSL7yA6CMC4T5/view?usp=sharing)** 🎬
+Watch the complete demonstration showcasing:
 
----
+* Resume-based interview generation
+* Real-time voice interaction
+* Adaptive question difficulty
+* Coding assessment workflow
+* AI-generated performance reports
 
-## 🌐 Deployed Application Link (Vercel)
+**Live Platform:** [https://ai-mock-interview-pi-five.vercel.app/](https://ai-mock-interview-pi-five.vercel.app/)
 
-> 🚀 **Live Demo:** Access our fully deployed, live, interactive mock interview platform on Vercel:
-
-👉 **[ACCESS NOVA AI LIVE ON VERCEL](https://ai-mock-interview-pi-five.vercel.app/)** 🌐
-
----
-
-## 🧠 The Problem
-Traditional technical mock interviews are manual, expensive, and fail to measure a candidate's conversational and architectural performance under strict, real-world time constraints. Candidates often struggle during live interviews not because they lack technical capabilities, but because they are unprepared for FAANG-level conversational schedules, project-specific grilling, and time management pressures.
-
-## 💡 Our Solution: Nova AI
-We built **Nova AI**, an autonomous, highly conversational technical interviewer that doesn't just read questions—it **evaluates, adapts, reacts, and grills** candidates like an elite senior engineer. 
-
-Nova replicates the exact pressure of a real interview by enforcing a strict **15-minute time budget**, extracting the candidate's actual projects from their resume, running a real-time difficulty scaling algorithm, and grading their final readiness across five core software engineering dimensions.
+**Demo Video:** [https://drive.google.com/file/d/1Ub2wwk6c9EHaWp-6syYGSL7yA6CMC4T5/view](https://drive.google.com/file/d/1Ub2wwk6c9EHaWp-6syYGSL7yA6CMC4T5/view)
 
 ---
 
-## ⚙️ How It Works (System Workflow)
-Nova AI is engineered as an end-to-end, high-fidelity conversational simulation pipeline:
-1. **Document Upload & Extraction:** Candidates drag-and-drop their PDF/DOCX resume. Advanced parsers (`pdf-parse` and `mammoth`) extract the raw structured text on our Node.js backend.
-2. **Hybrid Validation pre-Scanner:** The text is run through a strict pre-scanning module that evaluates section scoring (Education, Skills, Experience), looks for contact info, and applies negative keyword filters. Ambiguous uploads fall back to an LLM validation prompt to aggressively filter out Certificates, problem statements, or blank files.
-3. **Dynamic Project & Skill Extraction:** If valid, Nova's Llama-3.1 model parses the document in real-time to extract Matched Skills (present in both resume and Job Description), Missing Skills (required by JD but missing), and all **Key Projects** listed in their resume.
-4. **Adaptive Voice Simulation & Code Editor:** Candidates enter the Interview Room, featuring a pulsing animated Voice Aura and custom borderless floating subtitles. Subtitles and audio are parsed to be completely free of markdown tags or double dashes (`--`). The candidate progresses through 5 strict, time-boxed stages matching a FAANG timeline, with the option to manually open the integrated Monaco Code Editor to type and submit coding tasks when they are ready.
-5. **Multi-Dimensional Analytics:** Upon completion, the backend compiles scores across 5 axes (Accuracy, Clarity, Depth, Relevance, and Time Management) to output a final Readiness Score out of 50, alongside strengths and weaknesses.
+# 📌 Overview
+
+Technical interviews often fail to reflect real-world interview pressure, conversational depth, and project-specific discussions.
+
+Nova AI addresses this challenge by conducting personalized mock interviews that:
+
+* Analyze candidate resumes
+* Extract real project experience
+* Generate contextual technical questions
+* Evaluate communication and technical depth
+* Deliver actionable performance feedback
+
+The platform behaves like an experienced interviewer rather than a static question generator.
 
 ---
 
-## ⚡ What Makes Nova AI Different (Platform Uniqueness)
-Most mock interview platforms are either manual or built as simple question-generation templates. Nova AI is fundamentally different across four core engineering pillars:
+# ✨ Key Features
 
-| Capability | Existing AI Mock Platforms | Nova AI Mock Interview 🚀 |
-| :--- | :--- | :--- |
-| **Question Relevance** | Ask generic, pre-canned technical questions from a static dataset. | **Hyper-Personalized Project Grilling:** Nova actively reads the projects extracted from the candidate's resume and asks deep, architectural questions specifically about their own database and implementation choices. |
-| **Conversational Tone** | Outputs raw text, markdown blocks (like ````json````), horizontal rules (`---`), and sounds like a rigid robot. | **Elitely Human-Like:** Implements an aggressive backend and frontend text parser that strips formatting to deliver natural, warm, and highly empathetic human-to-human speech that reacts directly to previous answers. |
-| **Pacing & Progression** | Simple random lists of questions with no concept of stage timing or structured progression. | **Strict 5-Stage Timeline:** Dynamically tracks the interview across a strict 15-minute schedule (Introduction -> Resume Grilling -> Technical Monaco Coding -> Scenario Design -> Behavioral soft skills). |
-| **Code Editor Usability** | Clunky auto-popups that disrupt the conversational flow and force-open coding fields. | **Manual Monaco Control:** The live Monaco editor is under the absolute, manual control of the candidate, opening and closing exactly when the user clicks the toggle button, mirroring real interview environments (CoderPad). |
-| **Evaluation Accuracy** | Simple right-or-wrong grading that ignores speed, clarity, or length. | **Time-Weighted 5-Axis Metrics:** Evaluates time management, severely penalizing wordy, long-winded answers and actively rewarding concise, sharp engineering responses. |
+## 📄 Resume-Aware Interview Generation
 
----
+Nova AI automatically parses uploaded resumes and identifies:
 
-## ✨ Core Hackathon-Winning Features
+* Projects
+* Skills
+* Experience
+* Technical stack
 
-### 1. 📂 Real-Time Resume Projects Extraction
-Nova AI doesn't ask generic, pre-canned questions. When a candidate uploads their CV, our backend dynamically parses and extracts their **actual listed projects** using advanced PDF and Word text parsers. These projects are displayed as premium blue tags on the setup dashboard, and the AI actively designs deep, highly customized questions specifically targeting the candidate's own architectural and database implementation!
-
-### 2. 📅 Strict 15-Minute, 5-Stage FAANG Interview Timeline
-The interview runs on a strict **15-minute overall limit** (900 seconds) and automatically structures questions into a standard, natural time-boxed questioning progression:
-1. **Introduction [Target: 1.5 Min] (Questions 1-2):** A warm greeting and background introduction.
-2. **Resume Questions [Target: 2.5 Min] (Questions 3-4):** Contextual grilling based on their dynamically extracted projects.
-3. **Technical Questions [Target: 6.0 Min] (Questions 5-7):** Deep coding and data structures challenges.
-4. **Scenario Questions [Target: 3.0 Min] (Questions 8-9):** System design and scalable database architecture scenarios.
-5. **Behavioral Questions [Target: 1.5 Min] (Question 10):** SOFT skills and leadership evaluations.
-6. **Feedback Generation [Target: 0.5 Min]:** Concluding comprehensive report compiles.
-
-### 3. 🛡️ Strict Hybrid Document Validation
-Protects the AI from hallucination by filtering out certificate files, problem statements, or blank pages before letting candidates into the interview room:
-- **Rule-Based Pre-Scanner:** Instantly scores and penalizes documents based on core CV sections (Education, Skills, Experience) and contact information, applying negative scoring to certification keywords.
-- **AI Skepticism Layer:** Fallback-validates ambiguous documents through our Groq Llama-3.1 model to guarantee 100% data integrity.
-
-### 4. 📊 Multi-Axis Radar Scoring & Analytics
-Generates a comprehensive final evaluation report covering 5 objective dimensions graded out of 10:
-1. **Accuracy**
-2. **Clarity**
-3. **Depth**
-4. **Relevance**
-5. **Time Management** (which actively penalizes long-winded answers and rewards conciseness).
-Includes a Radar Chart visualization, final **Readiness Score out of 50**, and actionable strengths and weaknesses.
+The interview dynamically adapts to the candidate's background instead of relying on generic question banks.
 
 ---
 
-## 🛠 Tech Stack
+## ⏱ Structured Interview Flow
 
-**Frontend:**
-- React (Vite)
-- Tailwind & Vanilla CSS (Futuristic Glassmorphic Theme)
-- Chart.js & Radar Charts (Visualization)
-- Web Speech API (Low-latency real-time TTS/STT voice synthesis)
-- Monaco Editor (Live Code Editing)
+Each interview follows a carefully designed timeline that mirrors real technical interviews.
 
-**Backend:**
-- Node.js & Express
-- Firebase Admin SDK (Google & Email Sign-In with email verification gates)
-- Firebase Firestore (Conversation state, metrics, and document persistence)
-- Groq Cloud API (Llama-3.1-8B-Instant for ultra-low latency, sub-second inference)
-- PDF-Parse & Mammoth (High-fidelity resume document text extraction)
+| Stage                | Focus Area                      | Duration |
+| -------------------- | ------------------------------- | -------- |
+| Introduction         | Background & Icebreaker         | 1.5 min  |
+| Resume Discussion    | Project Deep Dive               | 2.5 min  |
+| Technical Assessment | DSA & Core Concepts             | 6 min    |
+| Scenario Round       | System Design & Problem Solving | 3 min    |
+| Behavioral Round     | Leadership & Communication      | 1.5 min  |
+| Feedback Generation  | Final Evaluation                | 30 sec   |
 
----
-
-## 🚀 How to Run Locally
-
-### Prerequisites
-- Node.js (v18+)
-- A Groq Cloud API Key
-- Firebase Service Account Credentials JSON
-
-### Setup
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/gopiadithya/Ai_Mock_Interview.git
-   cd Ai_Mock_Interview
-   ```
-
-2. **Backend Setup:**
-   ```bash
-   cd backend
-   npm install
-   # Create a .env file and specify:
-   # PORT=5000
-   # GROQ_API_KEY=your_groq_key
-   # Place your firebase-service-account.json inside the backend root folder
-   npm start
-   ```
-
-3. **Frontend Setup:**
-   ```bash
-   cd ../frontend
-   npm install
-   # Create a .env file and specify:
-   # VITE_API_URL=http://localhost:5000
-   npm run dev
-   ```
-
-4. **Open in Browser:** Navigate to `http://localhost:5173`
+Total Interview Duration: **15 Minutes**
 
 ---
 
-## 🤝 Team
-- Built with ❤️ for the **Hack2Hire AI-Powered Interview Hackathon**
+## 🎙 Real-Time Voice Interaction
+
+Features include:
+
+* Speech-to-Text transcription
+* Text-to-Speech responses
+* Live subtitles
+* Natural conversational flow
+* Low-latency AI responses
+
+The experience closely resembles a real human interviewer.
+
+---
+
+## 💻 Integrated Coding Environment
+
+Built-in Monaco Editor provides:
+
+* Real-time coding support
+* Manual editor controls
+* Interview-friendly coding workspace
+* Seamless transition between discussion and implementation
+
+---
+
+## 🛡 Resume Validation Pipeline
+
+To ensure document quality, Nova AI performs:
+
+### Rule-Based Validation
+
+Checks for:
+
+* Education
+* Skills
+* Experience
+* Contact Information
+
+### AI Validation Layer
+
+Uses LLM-based verification to distinguish genuine resumes from:
+
+* Certificates
+* Blank documents
+* Irrelevant files
+* Non-resume submissions
+
+---
+
+## 📊 AI Performance Analytics
+
+After every interview, Nova AI generates a detailed report covering:
+
+### Evaluation Metrics
+
+* Accuracy
+* Clarity
+* Technical Depth
+* Relevance
+* Time Management
+
+### Deliverables
+
+* Radar Chart Visualization
+* Readiness Score
+* Strength Analysis
+* Improvement Suggestions
+* Personalized Feedback
+
+---
+
+# 🏗 Architecture
+
+```text
+Resume Upload
+      │
+      ▼
+Document Parsing
+(PDF / DOCX)
+      │
+      ▼
+Project & Skill Extraction
+      │
+      ▼
+Adaptive Interview Engine
+      │
+      ▼
+Voice Interaction Layer
+      │
+      ▼
+Response Evaluation
+      │
+      ▼
+Performance Analytics
+```
+
+---
+
+# 🛠 Tech Stack
+
+## Frontend
+
+* React (Vite)
+* Tailwind CSS
+* Chart.js
+* Monaco Editor
+* Web Speech API
+
+## Backend
+
+* Node.js
+* Express.js
+* Firebase Admin SDK
+* Firebase Firestore
+* Groq API (Llama 3.1)
+* PDF-Parse
+* Mammoth
+
+## Authentication
+
+* Google Sign-In
+* Email Authentication
+* Email Verification
+
+---
+
+# 🚀 Getting Started
+
+## Prerequisites
+
+* Node.js v18+
+* Firebase Project
+* Groq API Key
+
+---
+
+## Clone Repository
+
+```bash
+git clone https://github.com/gopiadithya/Ai_Mock_Interview.git
+
+cd Ai_Mock_Interview
+```
+
+---
+
+## Backend Setup
+
+```bash
+cd backend
+
+npm install
+```
+
+Create a `.env` file:
+
+```env
+PORT=5000
+
+GROQ_API_KEY=your_groq_api_key
+```
+
+Add:
+
+```text
+firebase-service-account.json
+```
+
+to the backend root directory.
+
+Start the server:
+
+```bash
+npm start
+```
+
+---
+
+## Frontend Setup
+
+```bash
+cd frontend
+
+npm install
+```
+
+Create a `.env` file:
+
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+Run:
+
+```bash
+npm run dev
+```
+
+---
+
+## Access Application
+
+Open:
+
+```text
+http://localhost:5173
+```
+
+---
+
+# 🎯 Future Enhancements
+
+* Multi-language interview support
+* Video interview analysis
+* AI-powered coding evaluation
+* Company-specific interview tracks
+* Interview replay and coaching
+* Team hiring dashboards
+
+---
+
+# 🤝 Team
+
+Built for the **Hack2Hire AI-Powered Interview Hackathon**.
+
+---
+
+## ⭐ Why Nova AI?
+
+Nova AI goes beyond traditional mock interview platforms by combining:
+
+✅ Resume Intelligence
+✅ Adaptive Questioning
+✅ Voice-Based Conversations
+✅ Technical Evaluation
+✅ Real-Time Analytics
+
+to create an interview experience that closely mirrors modern software engineering interviews.
+
+---
