@@ -64,17 +64,17 @@ const analyzeProfile = async (resume, jd) => {
   }
 
   try {
-    // Extract Exact Skills, Match Percentage, and Projects using LLM (Extremely Fast)
     const prompt = `Analyze the following resume and job description.
-CRITICAL RULE: You MUST ONLY extract skills that are EXPLICITLY MENTIONED in the Resume. Do not guess skills.
-Compare those exact resume skills against the JD requirements. Also, extract all key projects listed in the resume.
 
-Return a STRICTLY VALID JSON object with this exact schema:
+CRITICAL RULES:
+1. Skills Extraction: You MUST ONLY extract skills that are EXPLICITLY MENTIONED in the Resume. Do not guess or extrapolate.
+2. Projects Extraction: You MUST extract all projects listed in the resume. Look under headings like "Projects", "Academic Projects", "Personal Projects", "Key Experience", "Work Experience", "Portfolio", etc. If there is a section about projects, extract EACH project name and a brief 1-sentence description (if available). Do not return an empty array if projects exist in the resume text!
+3. Format output as a STRICTLY VALID JSON object with this exact schema:
 {
   "matchedSkills": ["array of skills present in BOTH the resume and JD"],
   "missingSkills": ["array of skills required by JD but MISSING from resume"],
   "skills": ["array of ALL technical and soft skills actually found in the resume"],
-  "projects": ["array of projects found in the resume. Each project should be a clean string, ideally with title and 1-sentence description if available. If no projects are found, return an empty array."],
+  "projects": ["array of projects found in the resume (e.g. 'Project Title: Description of the project'). If no projects are found at all, return an empty array."],
   "matchPercentage": 75
 }
 
