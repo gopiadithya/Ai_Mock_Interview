@@ -47,27 +47,6 @@ const getMockEvaluation = () => {
   };
 };
 
-// ---------------- ML PIPELINE ----------------
-let extractor = null;
-async function getExtractor() {
-  if (extractor) return extractor;
-  // Dynamically import to support CommonJS environment
-  const { pipeline } = await import('@xenova/transformers');
-  extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-  return extractor;
-}
-
-function cosineSimilarity(vecA, vecB) {
-  let dotProduct = 0.0, normA = 0.0, normB = 0.0;
-  for (let i = 0; i < vecA.length; i++) {
-    dotProduct += vecA[i] * vecB[i];
-    normA += vecA[i] * vecA[i];
-    normB += vecB[i] * vecB[i];
-  }
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-}
-
-// ---------------- PROFILE ANALYSIS ----------------
 const analyzeProfile = async (resume, jd) => {
   const fallback = {
     matchedSkills: ["JavaScript", "React", "Node.js"],
@@ -76,34 +55,12 @@ const analyzeProfile = async (resume, jd) => {
     skills: ["JavaScript", "React", "Node.js"]
   };
   
+  if (!openai) {
+    return fallback;
+  }
+
   try {
-    // 1. Calculate Real Cosine Similarity Match using HuggingFace Model
-    let matchPercentage = 50;
-    try {
-      const getExtractorModel = await getExtractor();
-      // Ensure strings aren't too massive for the model context
-      const resumeSlice = resume.slice(0, 1500); 
-      const jdSlice = jd.slice(0, 1500);
-      
-      const out1 = await getExtractorModel(resumeSlice, { pooling: 'mean', normalize: true });
-      const out2 = await getExtractorModel(jdSlice, { pooling: 'mean', normalize: true });
-      
-      const vec1 = Array.from(out1.data);
-      const vec2 = Array.from(out2.data);
-      
-      let similarity = cosineSimilarity(vec1, vec2);
-      matchPercentage = Math.round(Math.max(0, similarity) * 100);
-      console.log(`[ML] Calculated Match Percentage: ${matchPercentage}%`);
-    } catch (mlErr) {
-      console.error("Transformers.js Error:", mlErr);
-    }
-
-    if (!openai) {
-      fallback.matchPercentage = matchPercentage;
-      return fallback;
-    }
-
-    // 2. Extract Exact Skills using LLM
+    // Extract Exact Skills and Match Percentage using LLM (Extremely Fast)
     const prompt = `Analyze the following resume and job description.
 CRITICAL RULE: You MUST ONLY extract skills that are EXPLICITLY MENTIONED in the Resume. Do not guess skills.
 Compare those exact resume skills against the JD requirements.
@@ -112,8 +69,10 @@ Return a STRICTLY VALID JSON object with this exact schema:
 {
   "matchedSkills": ["array of skills present in BOTH the resume and JD"],
   "missingSkills": ["array of skills required by JD but MISSING from resume"],
-  "skills": ["array of ALL technical and soft skills actually found in the resume"]
+  "skills": ["array of ALL technical and soft skills actually found in the resume"],
+  "matchPercentage": 75
 }
+
 Resume:\n${resume}\n\nJD:\n${jd}`;
 
     const response = await openai.chat.completions.create({
@@ -122,9 +81,7 @@ Resume:\n${resume}\n\nJD:\n${jd}`;
       response_format: { type: "json_object" }
     });
     
-    const parsed = JSON.parse(response.choices[0].message.content.trim());
-    parsed.matchPercentage = matchPercentage; // Inject true ML score
-    return parsed;
+    return JSON.parse(response.choices[0].message.content.trim());
   } catch (error) {
     console.error("AI Error:", error);
     return fallback;
