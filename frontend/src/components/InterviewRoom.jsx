@@ -41,7 +41,6 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
 
   const sendResponse = async (text, code) => {
     setTranscript('');
-    setShowCodeEditor(false); // Hide until AI asks again
     setCodeContent('');
     
     const duration = (Date.now() - currentQStartTime.current) / 1000;
@@ -51,7 +50,7 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
     setMessages(prev => [...prev, { role: 'user', content: displayContent }]);
     
     setLoading(true);
-
+ 
     try {
       const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const res = await axios.post(`${API_BASE}/api/interview/${interviewId}/chat`, {
@@ -69,10 +68,6 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
         
         setMessages(prev => [...prev, { role: 'assistant', content: res.data.reply, displayContent: res.data.displayQuestion }]);
         setDifficulty(res.data.difficulty);
-        
-        if (res.data.isCodeRequired) {
-          setShowCodeEditor(true);
-        }
         
         currentQStartTime.current = Date.now();
         speakText(res.data.reply, res.data.displayQuestion);
@@ -158,43 +153,14 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
       const preferredVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google UK English Female') || v.name.includes('Zira') || v.name.includes('Samantha'));
       if (preferredVoice) utterance.voice = preferredVoice;
       
-      setDisplayedCaption(''); // Set initial caption to empty (prevents displaying ... or ---)
+      // Set the full text caption IMMEDIATELY to prevent voice coming before text!
+      setDisplayedCaption(sanitizedFullText); 
       setIsSpeaking(true); // Set true immediately to prevent flashing the full text
       
       utterance.onstart = () => setIsSpeaking(true);
       
-      const evalLength = sanitizedQuestionText ? (sanitizedFullText.length - sanitizedQuestionText.length) : 0;
-      
-      utterance.onboundary = (event) => {
-        if (event.name === 'word') {
-          if (event.charIndex >= evalLength) {
-            // Nova is now speaking the question part: build it up progressively so it stays on screen
-            const relativeIndex = event.charIndex - evalLength;
-            setDisplayedCaption(sanitizedQuestionText.substring(0, relativeIndex + event.charLength));
-          } else {
-            // Nova is speaking the evaluation part: show current sentence only (removes text after spoken)
-            const currentIndex = event.charIndex;
-            let startIdx = 0;
-            for (let i = currentIndex; i >= 0; i--) {
-              if (['.', '!', '?'].includes(sanitizedFullText[i]) && i < currentIndex - 1) {
-                startIdx = i + 1;
-                break;
-              }
-            }
-            let endIdx = evalLength;
-            for (let i = currentIndex; i < evalLength; i++) {
-              if (['.', '!', '?'].includes(sanitizedFullText[i])) {
-                endIdx = i + 1;
-                break;
-              }
-            }
-            setDisplayedCaption(sanitizedFullText.substring(startIdx, endIdx).trim());
-          }
-        }
-      };
-      
       utterance.onend = () => {
-        setDisplayedCaption(sanitizedQuestionText || sanitizedFullText);
+        setDisplayedCaption(sanitizedFullText);
         setIsSpeaking(false);
         // Automatically turn on microphone to listen to answer
         if (recognitionRef.current) {

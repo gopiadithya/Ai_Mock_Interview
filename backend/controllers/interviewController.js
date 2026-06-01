@@ -181,7 +181,7 @@ exports.chat = async (req, res) => {
     }
 
     let forceTerminationFlag = false;
-    if (totalElapsedTime > 1200) forceTerminationFlag = true; // 20 min hard limit
+    if (totalElapsedTime > 900) forceTerminationFlag = true; // 15 min hard limit
     if (nextQuestionNumber > 10) forceTerminationFlag = true; // 10 Q hard limit
     if (failedConsecutiveCount >= 3) forceTerminationFlag = true; // Poor performance
     if (avgScore > 90 && nextQuestionNumber >= 7) forceTerminationFlag = true; // Excellent performance
