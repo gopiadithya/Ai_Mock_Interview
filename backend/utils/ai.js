@@ -64,21 +64,28 @@ const analyzeProfile = async (resume, jd) => {
   }
 
   try {
-    const prompt = `Analyze the following resume and job description.
+    const prompt = `You are a professional HR resume parser. Analyze the following resume and job description.
 
 CRITICAL RULES:
-1. Skills Extraction: You MUST ONLY extract skills that are EXPLICITLY MENTIONED in the Resume. Do not guess or extrapolate.
-2. Projects Extraction: You MUST extract all projects listed in the resume. Look under headings like "Projects", "Academic Projects", "Personal Projects", "Key Experience", "Work Experience", "Portfolio", etc. If there is a section about projects, extract EACH project name and a brief 1-sentence description (if available). Do not return an empty array if projects exist in the resume text!
+1. Skills Extraction: Extract skills that are EXPLICITLY MENTIONED in the Resume. Do not guess or extrapolate.
+2. Projects Extraction: You MUST extract all projects, academic projects, personal projects, or work-experience projects listed in the resume. Look under headings like "Projects", "Academic Projects", "Personal Projects", "Key Experience", "Work Experience", "Portfolio", "Research", etc. If a project, product, or system was built or designed, extract it! 
+   Format each project as a string: "Project Name: Brief 1-sentence description".
+   For example: ["Sentiment Analysis: Developed an LSTM model to classify text reviews with 92% accuracy.", "E-Commerce App: Built a full-stack store using React, Node.js, and Stripe."]
+   Do NOT return an empty array if any projects or engineering tasks exist in the resume text!
 3. Format output as a STRICTLY VALID JSON object with this exact schema:
 {
   "matchedSkills": ["array of skills present in BOTH the resume and JD"],
   "missingSkills": ["array of skills required by JD but MISSING from resume"],
   "skills": ["array of ALL technical and soft skills actually found in the resume"],
-  "projects": ["array of projects found in the resume (e.g. 'Project Title: Description of the project'). If no projects are found at all, return an empty array."],
+  "projects": ["array of projects found in the resume. Format: 'Name: 1-sentence description'"],
   "matchPercentage": 75
 }
 
-Resume:\n${resume}\n\nJD:\n${jd}`;
+Resume:
+${resume}
+
+JD:
+${jd}`;
 
     const response = await openai.chat.completions.create({
       model: "llama-3.1-8b-instant",
@@ -96,7 +103,123 @@ Resume:\n${resume}\n\nJD:\n${jd}`;
       cleanedResponse = cleanedResponse.slice(firstBrace, lastBrace + 1);
     }
     
-    return JSON.parse(cleanedResponse);
+    const parsed = JSON.parse(cleanedResponse);
+
+    // --- JSON HEALING AND NORMALIZATION ---
+    const normalized = {};
+    for (const key of Object.keys(parsed)) {
+      normalized[key.toLowerCase()] = parsed[key];
+    }
+
+    const result = {
+      matchedSkills: normalized.matchedskills || normalized.matched_skills || normalized.skills_matched || [],
+      missingSkills: normalized.missingskills || normalized.missing_skills || normalized.skills_missing || [],
+      skills: normalized.skills || normalized.allskills || normalized.all_skills || [],
+      projects: normalized.projects || normalized.projectlist || normalized.personal_projects || normalized.academic_projects || normalized.portfolio || normalized.work_projects || [],
+      matchPercentage: normalized.matchpercentage || normalized.match_percentage || normalized.percentage || 50
+    };
+
+    // Ensure matchPercentage is a valid number
+    if (typeof result.matchPercentage === 'string') {
+      result.matchPercentage = parseInt(result.matchPercentage.replace(/[^0-9]/g, ''), 10) || 50;
+    }
+
+    // Normalize projects to an array of strings
+    if (result.projects && !Array.isArray(result.projects)) {
+      if (typeof result.projects === 'string') {
+        result.projects = [result.projects];
+      } else if (typeof result.projects === 'object') {
+        const tempProjects = [];
+        for (const title of Object.keys(result.projects)) {
+          const val = result.projects[title];
+          if (typeof val === 'string') {
+            tempProjects.push(`${title}: ${val}`);
+          } else if (typeof val === 'object' && val !== null) {
+            const desc = val.description || val.desc || val.details || JSON.stringify(val);
+            tempProjects.push(`${title}: ${desc}`);
+          } else {
+            tempProjects.push(title);
+          }
+        }
+        result.projects = tempProjects;
+      } else {
+        result.projects = [];
+      }
+    }
+
+    // If projects is an array, but contains objects instead of strings
+    if (Array.isArray(result.projects)) {
+      result.projects = result.projects.map(item => {
+        if (typeof item === 'string') {
+          return item;
+        } else if (typeof item === 'object' && item !== null) {
+          const title = item.title || item.name || item.projectName || Object.keys(item)[0] || 'Project';
+          const desc = item.description || item.desc || item.details || item[title] || '';
+          return desc ? `${title}: ${desc}` : title;
+        }
+        return String(item);
+      });
+    } else {
+      result.projects = [];
+    }
+
+    // Strip empty/null elements from arrays
+    result.matchedSkills = Array.isArray(result.matchedSkills) ? result.matchedSkills.filter(Boolean) : [];
+    result.missingSkills = Array.isArray(result.missingSkills) ? result.missingSkills.filter(Boolean) : [];
+    result.skills = Array.isArray(result.skills) ? result.skills.filter(Boolean) : [];
+    result.projects = Array.isArray(result.projects) ? result.projects.filter(Boolean) : [];
+
+    // --- REGEX FALLBACK PARSER ---
+    // If LLM returned 0 projects, let's look for projects in the resume text manually using a regex!
+    if (result.projects.length === 0) {
+      console.log("[analyzeProfile] LLM returned 0 projects. Running Regex Fallback Parser...");
+      const projectRegex = /(?:projects|academic projects|personal projects|key projects|portfolio|technical projects)([\s\S]*?)(?=\n\s*(?:skills|experience|education|employment|work history|certifications|achievements|languages|activities|interests|hobbies|$))/i;
+      const match = resume.match(projectRegex);
+      if (match && match[1]) {
+        const projectSection = match[1].trim();
+        // Split section by bullets or newlines
+        const lines = projectSection.split(/\n+/).map(l => l.trim()).filter(l => l.length > 15);
+        const extracted = [];
+        
+        let currentProject = "";
+        for (const line of lines) {
+          // Check if line starts with bullet, number, or dash
+          if (/^[-*•\d.]/.test(line)) {
+            if (currentProject) {
+              extracted.push(currentProject);
+            }
+            currentProject = line.replace(/^[-*•\d.\s]+/, '').trim();
+          } else {
+            if (currentProject) {
+              currentProject += " " + line;
+            } else {
+              currentProject = line;
+            }
+          }
+          if (extracted.length >= 3) break;
+        }
+        if (currentProject) {
+          extracted.push(currentProject);
+        }
+
+        if (extracted.length > 0) {
+          result.projects = extracted.slice(0, 3).map(p => {
+            // Clean up and format
+            const clean = p.replace(/\s+/g, ' ').trim();
+            if (clean.includes(':')) return clean;
+            // Try to split on first major break or verb
+            const colonIdx = clean.search(/(?:\bbuilt\b|\bdeveloped\b|\bcreated\b|\bdesigned\b|\busing\b)/i);
+            if (colonIdx > 5) {
+              return `${clean.substring(0, colonIdx).trim()}: ${clean.substring(colonIdx).trim()}`;
+            }
+            return clean;
+          });
+          console.log("[analyzeProfile] Regex Fallback Parser successfully extracted projects:", result.projects);
+        }
+      }
+    }
+
+    return result;
   } catch (error) {
     console.error("AI Error:", error);
     return fallback;
