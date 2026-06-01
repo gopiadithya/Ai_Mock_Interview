@@ -30,6 +30,7 @@ const LoginPage = ({ onLogin }) => {
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         if (formData.name) {
           await updateProfile(userCredential.user, { displayName: formData.name });
+          await userCredential.user.reload();
         }
         onLogin();
       }

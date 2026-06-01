@@ -17,10 +17,18 @@ function App() {
   React.useEffect(() => {
     import('./firebase').then(({ auth }) => {
       import('firebase/auth').then(({ onAuthStateChanged }) => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
           if (user) {
             setIsAuthenticated(true);
-            setUserName(user.displayName || user.email.split('@')[0]);
+            if (!user.displayName) {
+              try {
+                await user.reload();
+              } catch (e) {
+                console.error("Error reloading user:", e);
+              }
+            }
+            const updatedUser = auth.currentUser || user;
+            setUserName(updatedUser.displayName || updatedUser.email.split('@')[0]);
           } else {
             setIsAuthenticated(false);
             setUserName('');
@@ -97,7 +105,7 @@ function App() {
       </header>
 
       <main style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {stage === 'setup' && <SetupDashboard onSetupComplete={handleSetupComplete} />}
+        {stage === 'setup' && <SetupDashboard onSetupComplete={handleSetupComplete} defaultName={userName} />}
         {stage === 'interview' && (
           <InterviewRoom 
             interviewId={interviewId} 

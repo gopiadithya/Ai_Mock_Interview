@@ -2,14 +2,20 @@ import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { User, FileText, Briefcase, ChevronRight, UploadCloud, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 
-const SetupDashboard = ({ onSetupComplete }) => {
-  const [formData, setFormData] = useState({ candidateName: '', jobDescription: '' });
+const SetupDashboard = ({ onSetupComplete, defaultName = '' }) => {
+  const [formData, setFormData] = useState({ candidateName: defaultName, jobDescription: '' });
   const [resumeFile, setResumeFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [toast, setToast] = useState('');
   const [analysisResult, setAnalysisResult] = useState(null);
   const fileInputRef = useRef(null);
+
+  React.useEffect(() => {
+    if (defaultName && !formData.candidateName) {
+      setFormData(prev => ({ ...prev, candidateName: defaultName }));
+    }
+  }, [defaultName]);
 
   const handleDrag = (e) => {
     e.preventDefault();
