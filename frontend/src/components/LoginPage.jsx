@@ -6,7 +6,6 @@ import {
   createUserWithEmailAndPassword, 
   signInWithPopup, 
   updateProfile,
-  sendEmailVerification,
   sendPasswordResetEmail
 } from 'firebase/auth';
 
@@ -25,32 +24,14 @@ const LoginPage = ({ onLogin }) => {
     
     try {
       if (isLogin) {
-        const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
-        const user = userCredential.user;
-        
-        // Enforce email verification ONLY for users created after this feature was added
-        const creationTime = new Date(user.metadata.creationTime).getTime();
-        const cutoffTime = new Date('2026-06-01T00:00:00Z').getTime(); // Enforce for new users
-        
-        if (creationTime > cutoffTime && !user.emailVerified) {
-          await auth.signOut();
-          setError('Please verify your email address before logging in. Check your inbox!');
-          setLoading(false);
-          return;
-        }
-        
+        await signInWithEmailAndPassword(auth, formData.email, formData.password);
         onLogin();
       } else {
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         if (formData.name) {
           await updateProfile(userCredential.user, { displayName: formData.name });
         }
-        // Send email verification
-        await sendEmailVerification(userCredential.user);
-        await auth.signOut(); // Force them to sign in after verifying
-        
-        setSuccessMsg('Account created! Please check your email to verify your account before logging in.');
-        setIsLogin(true); // Switch to login view
+        onLogin();
       }
     } catch (err) {
       console.error(err);
