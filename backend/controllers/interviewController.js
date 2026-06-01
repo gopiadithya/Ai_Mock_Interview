@@ -24,38 +24,42 @@ exports.setupInterview = async (req, res) => {
       return res.status(400).json({ success: false, error: 'The uploaded document appears to be blank or invalid. Please upload a detailed resume.' });
     }
 
-    // --- HYBRID VALIDATION PIPELINE ---
+    // --- STRICT HYBRID VALIDATION PIPELINE ---
     const lowerText = resumeText.toLowerCase();
-    let ruleScore = 0;
+    
+    // 1. Core Sections Check (MUST have at least 2 to even be considered a resume)
+    let coreSectionsCount = 0;
+    if (lowerText.includes('education') || lowerText.includes('university') || lowerText.includes('college') || lowerText.includes('degree') || lowerText.includes('cgpa')) coreSectionsCount++;
+    if (lowerText.includes('experience') || lowerText.includes('employment') || lowerText.includes('work history') || lowerText.includes('internship')) coreSectionsCount++;
+    if (lowerText.includes('skills') || lowerText.includes('technologies') || lowerText.includes('tools')) coreSectionsCount++;
+    if (lowerText.includes('projects') || lowerText.includes('certifications') || lowerText.includes('achievements')) coreSectionsCount++;
 
-    // 1. Keyword check
-    const resumeKeywords = [
-      "education", "skills", "experience", "projects", "certifications", 
-      "internship", "work experience", "technical skills", "achievements", 
-      "linkedin", "github", "summary", "profile", "university", "college", "degree"
-    ];
-    resumeKeywords.forEach(keyword => {
-      if (lowerText.includes(keyword)) ruleScore++;
-    });
+    if (coreSectionsCount < 2) {
+      return res.status(400).json({ success: false, error: 'Document rejected. It does not appear to be a resume. A valid resume must contain standard sections like Education, Experience, or Skills.' });
+    }
 
-    // 1.5 Negative Keyword Check (Certificates, Awards)
-    const negativeKeywords = ["certificate of completion", "this is to certify", "award", "diploma", "successfully completed"];
-    negativeKeywords.forEach(keyword => {
-      if (lowerText.includes(keyword)) ruleScore -= 3; // Heavily penalize certificates
-    });
+    let ruleScore = coreSectionsCount * 2; // Weight core sections heavily
 
-    // 2. Regex check
+    // 2. Contact Info Check (Resumes almost always have these)
     const emailRegex = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/;
     const phoneRegex = /(\+91)?[-. ]?[6-9]\d{9}/;
-    if (emailRegex.test(resumeText)) ruleScore++;
-    if (phoneRegex.test(resumeText)) ruleScore++;
+    if (emailRegex.test(resumeText)) ruleScore += 2;
+    if (phoneRegex.test(resumeText)) ruleScore += 2;
+    
+    if (lowerText.includes('linkedin.com') || lowerText.includes('github.com')) ruleScore += 1;
 
-    console.log(`[Validation] Rule Score for ${candidateName}: ${ruleScore}`);
+    // 3. Negative Keyword Check (Certificates, Problem Statements, Awards)
+    const negativeKeywords = ["certificate of completion", "this is to certify", "award", "diploma", "successfully completed", "problem statement", "objective:", "constraints:", "input format:", "output format:"];
+    negativeKeywords.forEach(keyword => {
+      if (lowerText.includes(keyword)) ruleScore -= 5; // Heavily penalize non-resumes
+    });
 
-    // 3. Decision Tree
-    if (ruleScore <= 1) {
-      return res.status(400).json({ success: false, error: 'Document rejected. It does not appear to be a resume. Please upload a valid CV.' });
-    } else if (ruleScore >= 2 && ruleScore <= 4) {
+    console.log(`[Validation] Strict Rule Score for ${candidateName}: ${ruleScore}`);
+
+    // 4. Decision Tree
+    if (ruleScore < 4) {
+      return res.status(400).json({ success: false, error: 'Document rejected. It lacks sufficient resume characteristics. Please upload a detailed, professional CV.' });
+    } else if (ruleScore >= 4 && ruleScore < 8) {
       // Ambiguous: Fallback to AI
       console.log(`[Validation] Ambiguous Score (${ruleScore}). Triggering AI Validation...`);
       const aiValidation = await validateResumeDocument(resumeText);
