@@ -19,6 +19,14 @@
 
 ---
 
+## 🌐 Deployed Application Link (Vercel)
+
+> 🚀 **Live Demo:** Access our fully deployed, live, interactive mock interview platform on Vercel:
+
+👉 **[ACCESS NOVA AI LIVE ON VERCEL](https://ai-mock-interview-pi-five.vercel.app/)** 🌐
+
+---
+
 ## 🧠 The Problem
 Traditional technical mock interviews are manual, expensive, and fail to measure a candidate's conversational and architectural performance under strict, real-world time constraints. Candidates often struggle during live interviews not because they lack technical capabilities, but because they are unprepared for FAANG-level conversational schedules, project-specific grilling, and time management pressures.
 
@@ -66,20 +74,12 @@ The interview runs on a strict **15-minute overall limit** (900 seconds) and aut
 5. **Behavioral Questions [Target: 1.5 Min] (Question 10):** SOFT skills and leadership evaluations.
 6. **Feedback Generation [Target: 0.5 Min]:** Concluding comprehensive report compiles.
 
-### 3. 🎙️ Natural Human-to-Human Conversational Flow
-- **Sanitized Speech Buffer:** We engineered an aggressive backend text parser that strips away markdown backticks (````json````), horizontal rules (`---`), and symbols. Nova speaks naturally and conversationally, completely avoiding robotic indicators.
-- **Borderless Captions:** The text display container has been made fully borderless and transparent, letting Nova's spoken subtitles float cleanly on top of the interactive animated aura visualization.
-- **Zero-Lag Subtitles:** The progressive subtitles load immediately upon speech initialization, ensuring 100% voice-to-caption synchronization across all operating systems.
-
-### 4. 💻 Full-Control Integrated Monaco Code Editor
-Candidates have a fully integrated, live Monaco Code Editor in their browser. Open and close triggers are **100% manually controlled** by the user via a smooth round button toggle at the bottom of the screen—ensuring candidates write and compile their coding functions when they are ready.
-
-### 5. 🛡️ Strict Hybrid Document Validation
+### 3. 🛡️ Strict Hybrid Document Validation
 Protects the AI from hallucination by filtering out certificate files, problem statements, or blank pages before letting candidates into the interview room:
 - **Rule-Based Pre-Scanner:** Instantly scores and penalizes documents based on core CV sections (Education, Skills, Experience) and contact information, applying negative scoring to certification keywords.
 - **AI Skepticism Layer:** Fallback-validates ambiguous documents through our Groq Llama-3.1 model to guarantee 100% data integrity.
 
-### 6. 📊 Multi-Axis Radar Scoring & Analytics
+### 4. 📊 Multi-Axis Radar Scoring & Analytics
 Generates a comprehensive final evaluation report covering 5 objective dimensions graded out of 10:
 1. **Accuracy**
 2. **Clarity**
