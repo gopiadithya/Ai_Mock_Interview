@@ -29,6 +29,29 @@ Nova replicates the exact pressure of a real interview by enforcing a strict **1
 
 ---
 
+## ⚙️ How It Works (System Workflow)
+Nova AI is engineered as an end-to-end, high-fidelity conversational simulation pipeline:
+1. **Document Upload & Extraction:** Candidates drag-and-drop their PDF/DOCX resume. Advanced parsers (`pdf-parse` and `mammoth`) extract the raw structured text on our Node.js backend.
+2. **Hybrid Validation pre-Scanner:** The text is run through a strict pre-scanning module that evaluates section scoring (Education, Skills, Experience), looks for contact info, and applies negative keyword filters. Ambiguous uploads fall back to an LLM validation prompt to aggressively filter out Certificates, problem statements, or blank files.
+3. **Dynamic Project & Skill Extraction:** If valid, Nova's Llama-3.1 model parses the document in real-time to extract Matched Skills (present in both resume and Job Description), Missing Skills (required by JD but missing), and all **Key Projects** listed in their resume.
+4. **Adaptive Voice Simulation & Code Editor:** Candidates enter the Interview Room, featuring a pulsing animated Voice Aura and custom borderless floating subtitles. Subtitles and audio are parsed to be completely free of markdown tags or double dashes (`--`). The candidate progresses through 5 strict, time-boxed stages matching a FAANG timeline, with the option to manually open the integrated Monaco Code Editor to type and submit coding tasks when they are ready.
+5. **Multi-Dimensional Analytics:** Upon completion, the backend compiles scores across 5 axes (Accuracy, Clarity, Depth, Relevance, and Time Management) to output a final Readiness Score out of 50, alongside strengths and weaknesses.
+
+---
+
+## ⚡ What Makes Nova AI Different (Platform Uniqueness)
+Most mock interview platforms are either manual or built as simple question-generation templates. Nova AI is fundamentally different across four core engineering pillars:
+
+| Capability | Existing AI Mock Platforms | Nova AI Mock Interview 🚀 |
+| :--- | :--- | :--- |
+| **Question Relevance** | Ask generic, pre-canned technical questions from a static dataset. | **Hyper-Personalized Project Grilling:** Nova actively reads the projects extracted from the candidate's resume and asks deep, architectural questions specifically about their own database and implementation choices. |
+| **Conversational Tone** | Outputs raw text, markdown blocks (like ````json````), horizontal rules (`---`), and sounds like a rigid robot. | **Elitely Human-Like:** Implements an aggressive backend and frontend text parser that strips formatting to deliver natural, warm, and highly empathetic human-to-human speech that reacts directly to previous answers. |
+| **Pacing & Progression** | Simple random lists of questions with no concept of stage timing or structured progression. | **Strict 5-Stage Timeline:** Dynamically tracks the interview across a strict 15-minute schedule (Introduction -> Resume Grilling -> Technical Monaco Coding -> Scenario Design -> Behavioral soft skills). |
+| **Code Editor Usability** | Clunky auto-popups that disrupt the conversational flow and force-open coding fields. | **Manual Monaco Control:** The live Monaco editor is under the absolute, manual control of the candidate, opening and closing exactly when the user clicks the toggle button, mirroring real interview environments (CoderPad). |
+| **Evaluation Accuracy** | Simple right-or-wrong grading that ignores speed, clarity, or length. | **Time-Weighted 5-Axis Metrics:** Evaluates time management, severely penalizing wordy, long-winded answers and actively rewarding concise, sharp engineering responses. |
+
+---
+
 ## ✨ Core Hackathon-Winning Features
 
 ### 1. 📂 Real-Time Resume Projects Extraction
