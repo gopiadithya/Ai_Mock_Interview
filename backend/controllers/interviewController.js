@@ -161,10 +161,10 @@ exports.chat = async (req, res) => {
     // Dynamic Stage Tracking
     const nextQuestionNumber = assistantMessages.length + 1;
     let currentStage = 'Introduction';
-    if (nextQuestionNumber === 2) currentStage = 'Resume & Past Experience';
-    else if (nextQuestionNumber >= 3 && nextQuestionNumber <= 6) currentStage = 'Core Technical';
-    else if (nextQuestionNumber >= 7 && nextQuestionNumber <= 8) currentStage = 'Scenario-Based Architecture';
-    else if (nextQuestionNumber >= 9) currentStage = 'Behavioral & Culture Fit';
+    if (nextQuestionNumber >= 3 && nextQuestionNumber <= 4) currentStage = 'Resume Questions';
+    else if (nextQuestionNumber >= 5 && nextQuestionNumber <= 7) currentStage = 'Technical Questions';
+    else if (nextQuestionNumber >= 8 && nextQuestionNumber <= 9) currentStage = 'Scenario Questions';
+    else if (nextQuestionNumber >= 10) currentStage = 'Behavioral Questions';
 
     // Check performance threshold for early termination (3 consecutive fails < 40)
     let failedConsecutiveCount = 0;
@@ -186,10 +186,14 @@ exports.chat = async (req, res) => {
     if (failedConsecutiveCount >= 3) forceTerminationFlag = true; // Poor performance
     if (avgScore > 90 && nextQuestionNumber >= 7) forceTerminationFlag = true; // Excellent performance
 
+    // Extract projects from the interview document
+    const candidateProjects = interview.profileAnalysis?.projects || [];
+
     // Generate the next interaction
     const allMessages = interview.messages.concat(userMessage);
     const aiResponseText = await generateNextInteraction({ 
       skills: interview.extractedSkills,
+      projects: candidateProjects,
       jobDescription: interview.jobDescription,
       currentStage,
       nextQuestionNumber,
