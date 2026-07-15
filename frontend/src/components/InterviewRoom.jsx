@@ -325,11 +325,31 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
         {/* Left Side: Voice Assistant Screen */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '20px', textAlign: 'center', transition: 'all 0.4s ease' }}>
           
-          {/* Animated soundwave widget */}
-          <div className={`soundwave-container ${isSpeaking ? 'speaking' : isListening ? 'listening' : ''}`}>
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="soundwave-bar" />
-            ))}
+          {/* Professional status indicator badge */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '6px 16px',
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '20px',
+            fontSize: '0.85rem',
+            fontWeight: 500,
+            color: 'var(--text-secondary)',
+            marginBottom: '24px',
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase'
+          }}>
+            <div style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: isSpeaking ? 'var(--accent-primary)' : isListening ? 'var(--success-color)' : 'rgba(255,255,255,0.2)',
+              boxShadow: isSpeaking ? '0 0 8px var(--accent-primary)' : isListening ? '0 0 8px var(--success-color)' : 'none',
+              animation: isSpeaking || isListening ? 'pulse 2s infinite' : 'none',
+            }} />
+            {isSpeaking ? 'Nova Speaking' : isListening ? 'Listening' : 'Ready'}
           </div>
 
           <div style={{ background: 'transparent', padding: '16px 32px', border: 'none', maxWidth: '750px', width: '100%', minHeight: '120px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: 'none' }}>
