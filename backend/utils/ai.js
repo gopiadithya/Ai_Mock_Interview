@@ -64,27 +64,28 @@ const analyzeProfile = async (resume, jd) => {
   }
 
   try {
-    const prompt = `You are a professional HR resume parser. Analyze the following resume and job description.
+    const prompt = `You are a professional resume parsing engine. Analyze the following resume text and job description (JD).
 
-CRITICAL RULES:
-1. Skills Extraction: Extract skills that are EXPLICITLY MENTIONED in the Resume. Do not guess or extrapolate.
-2. Projects Extraction: You MUST extract all projects, academic projects, personal projects, or work-experience projects listed in the resume. Look under headings like "Projects", "Academic Projects", "Personal Projects", "Key Experience", "Work Experience", "Portfolio", "Research", etc. If a project, product, or system was built or designed, extract it! 
-   Format each project as a string: "Project Name: Brief 1-sentence description".
-   For example: ["Sentiment Analysis: Developed an LSTM model to classify text reviews with 92% accuracy.", "E-Commerce App: Built a full-stack store using React, Node.js, and Stripe."]
-   Do NOT return an empty array if any projects or engineering tasks exist in the resume text!
-3. Format output as a STRICTLY VALID JSON object with this exact schema:
+CRITICAL EXTRACTION RULES:
+1. Skills Extraction: Extract technical and soft skills that are EXPLICITLY listed in the resume. Do not extrapolate.
+2. Projects Extraction: You MUST extract projects, personal projects, academic projects, or professional systems/applications built.
+   - Scan under headings like: Projects, Experience, Employment, Achievements, Portfolio, Research, Open Source.
+   - If a candidate describes building, developing, designing, or implementing a system (e.g., "Built a web app using Node.js..."), extract that as a project.
+   - Format each project as a single clear string: "Project Name: Brief 1-sentence description including key tech used".
+   - Return at least 1-3 projects if any engineering activities are mentioned. Do not leave the array empty.
+3. Output format: You MUST return a strictly valid JSON object matching this exact schema (no trailing commas, no extra text):
 {
-  "matchedSkills": ["array of skills present in BOTH the resume and JD"],
-  "missingSkills": ["array of skills required by JD but MISSING from resume"],
-  "skills": ["array of ALL technical and soft skills actually found in the resume"],
-  "projects": ["array of projects found in the resume. Format: 'Name: 1-sentence description'"],
+  "matchedSkills": ["skills matching both resume and JD"],
+  "missingSkills": ["skills in JD but missing in resume"],
+  "skills": ["all skills in resume"],
+  "projects": ["list of projects matching the format 'Name: Description'"],
   "matchPercentage": 75
 }
 
-Resume:
+Resume Text:
 ${resume}
 
-JD:
+Job Description:
 ${jd}`;
 
     const response = await openai.chat.completions.create({
@@ -183,7 +184,6 @@ ${jd}`;
         
         let currentProject = "";
         for (const line of lines) {
-          // Check if line starts with bullet, number, or dash
           if (/^[-*•\d.]/.test(line)) {
             if (currentProject) {
               extracted.push(currentProject);
@@ -204,10 +204,8 @@ ${jd}`;
 
         if (extracted.length > 0) {
           result.projects = extracted.slice(0, 3).map(p => {
-            // Clean up and format
             const clean = p.replace(/\s+/g, ' ').trim();
             if (clean.includes(':')) return clean;
-            // Try to split on first major break or verb
             const colonIdx = clean.search(/(?:\bbuilt\b|\bdeveloped\b|\bcreated\b|\bdesigned\b|\busing\b)/i);
             if (colonIdx > 5) {
               return `${clean.substring(0, colonIdx).trim()}: ${clean.substring(colonIdx).trim()}`;
@@ -216,6 +214,19 @@ ${jd}`;
           });
           console.log("[analyzeProfile] Regex Fallback Parser successfully extracted projects:", result.projects);
         }
+      }
+    }
+
+    // Secondary fallback: if still zero, parse bullet points from work history as project items
+    if (result.projects.length === 0) {
+      console.log("[analyzeProfile] Second-stage fallback: Scanning experience bullets for projects...");
+      const bullets = resume.match(/[-*•]\s+([^\n]{30,})/g);
+      if (bullets && bullets.length > 0) {
+        result.projects = bullets.slice(0, 3).map(b => {
+          const clean = b.replace(/^[-*•\s]+/, '').replace(/\s+/g, ' ').trim();
+          if (clean.includes(':')) return clean;
+          return `Engineering Task: ${clean}`;
+        });
       }
     }
 

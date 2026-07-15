@@ -224,6 +224,22 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
     symbol: ['{ }', '< >', '()', ';;', '=>', '[]', '/*'][Math.floor(Math.random() * 7)]
   })));
 
+  // Calculate current stage index dynamically
+  const assistantCount = messages.filter(m => m.role === 'assistant').length;
+  let activeStageIdx = 0; // Intro
+  if (assistantCount >= 2 && assistantCount <= 3) activeStageIdx = 1; // Resume
+  else if (assistantCount >= 4 && assistantCount <= 6) activeStageIdx = 2; // Technical
+  else if (assistantCount >= 7 && assistantCount <= 8) activeStageIdx = 3; // Scenario
+  else if (assistantCount >= 9) activeStageIdx = 4; // Behavioral
+
+  const stages = [
+    { label: 'Introduction', countRange: 'Q1-2' },
+    { label: 'Resume Projects', countRange: 'Q3-4' },
+    { label: 'Technical Monaco', countRange: 'Q5-7' },
+    { label: 'Scenario Round', countRange: 'Q8-9' },
+    { label: 'Behavioral Fit', countRange: 'Q10' }
+  ];
+
   return (
     <div className="glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', padding: 0 }}>
       {/* Floating Engineering Symbols */}
@@ -262,6 +278,7 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
         </div>
       )}
 
+      {/* Header Room Panel */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px', zIndex: 1, borderBottom: '1px solid rgba(255,255,255,0.05)', marginTop: isListening ? '4px' : '0' }}>
         <h2 style={{ margin: 0, fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ 
@@ -270,7 +287,7 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
             boxShadow: isSpeaking ? '0 0 12px var(--accent-primary)' : 'none',
             transition: 'all 0.3s ease'
           }}></div>
-          Nova
+          Nova AI Room
         </h2>
         <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
@@ -284,11 +301,38 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
         </div>
       </div>
 
+      {/* Interactive Timeline Stepper */}
+      <div style={{ padding: '16px 24px 0 24px', zIndex: 1 }}>
+        <div className="stage-stepper">
+          {stages.map((stage, idx) => {
+            let statusClass = '';
+            if (idx === activeStageIdx) statusClass = 'active';
+            else if (idx < activeStageIdx) statusClass = 'completed';
+
+            return (
+              <div key={idx} className={`stage-step ${statusClass}`}>
+                <div className="stage-node">{idx + 1}</div>
+                <div className="stage-label">{stage.label}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Main Working Panel */}
       <div style={{ flex: 1, display: 'flex', zIndex: 1, overflow: 'hidden' }}>
         
-        {/* Left Side: Voice Assistant */}
+        {/* Left Side: Voice Assistant Screen */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '20px', textAlign: 'center', transition: 'all 0.4s ease' }}>
-          <div style={{ background: 'transparent', padding: '32px', border: 'none', maxWidth: '700px', width: '100%', minHeight: '150px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: 'none' }}>
+          
+          {/* Animated soundwave widget */}
+          <div className={`soundwave-container ${isSpeaking ? 'speaking' : isListening ? 'listening' : ''}`}>
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="soundwave-bar" />
+            ))}
+          </div>
+
+          <div style={{ background: 'transparent', padding: '16px 32px', border: 'none', maxWidth: '750px', width: '100%', minHeight: '120px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxShadow: 'none' }}>
             {loading ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
                 <div className="typing-dots" style={{ transform: 'scale(1.2)' }}>
@@ -298,7 +342,7 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
               </div>
             ) : (
               <h2 style={{ 
-                fontSize: showCodeEditor ? '1.1rem' : '1.4rem', 
+                fontSize: showCodeEditor ? '1.15rem' : '1.35rem', 
                 lineHeight: 1.6, fontWeight: 400, margin: 0,
                 textShadow: '0 2px 10px rgba(0,0,0,0.5)', transition: 'all 0.3s ease'
               }}>
@@ -308,12 +352,12 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
           </div>
         </div>
 
-        {/* Right Side: Code Editor (Dynamic) */}
+        {/* Right Side: Monaco Code Editor */}
         {showCodeEditor && (
           <div style={{ flex: '1', borderLeft: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', padding: '20px', animation: 'slideInRight 0.4s ease' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-primary)', marginBottom: '16px', fontSize: '1.1rem' }}>
               <Code size={20} />
-              Live Code Editor
+              Interactive Monaco Code Workspace
             </h3>
             <div style={{ flex: 1, borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
               <Editor
@@ -335,14 +379,16 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
 
       </div>
 
-      <div style={{ minHeight: '60px', padding: '0 24px', textAlign: 'center', color: 'var(--text-primary)', zIndex: 1, fontSize: '1.2rem', fontWeight: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {/* Speech transcript output banner */}
+      <div style={{ minHeight: '50px', padding: '0 24px', textAlign: 'center', color: 'var(--text-primary)', zIndex: 1, fontSize: '1.1rem', fontWeight: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {isListening ? (
-          <p style={{ fontStyle: 'italic', color: 'var(--text-primary)' }}>{transcript || "Listening..."}</p>
+          <p style={{ fontStyle: 'italic', color: 'var(--success-color)' }}>{transcript || "Listening..."}</p>
         ) : (
-          <p style={{ color: 'var(--text-secondary)' }}>Tap the mic to answer.</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Tap the mic to reply when Nova is ready.</p>
         )}
       </div>
 
+      {/* Floating Panel Controls */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '32px', padding: '24px', zIndex: 1, background: 'rgba(13, 17, 23, 0.4)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <button 
           onClick={() => setShowCodeEditor(!showCodeEditor)}
@@ -356,7 +402,7 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
             transition: 'all 0.3s ease',
             alignSelf: 'center'
           }}
-          title="Toggle Code Editor"
+          title="Toggle Code Workspace"
         >
           <Code size={24} color={showCodeEditor ? "#fff" : "var(--accent-primary)"} />
         </button>

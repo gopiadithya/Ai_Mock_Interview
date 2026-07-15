@@ -20,6 +20,18 @@ exports.setupInterview = async (req, res) => {
       }
     }
 
+    // Clean and sanitize the extracted text to prevent formatting bugs
+    if (resumeText) {
+      resumeText = resumeText
+        .replace(/\r\n/g, '\n') // Normalize newlines
+        .replace(/\t/g, ' ') // Tabs to spaces
+        .replace(/ +/g, ' ') // Multiple spaces to single
+        .replace(/-\n/g, '') // Fix hyphenated line breaks
+        .replace(/\n{3,}/g, '\n\n') // Limit excessive spacing
+        .trim();
+      console.log(`[Text Extraction] Sanitized text length: ${resumeText.length} chars.`);
+    }
+
     if (!resumeText || resumeText.trim().length < 50) {
       return res.status(400).json({ success: false, error: 'The uploaded document appears to be blank or invalid. Please upload a detailed resume.' });
     }
