@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { User, FileText, Briefcase, ChevronRight, UploadCloud, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { API_BASE } from '../config';
 
 const SetupDashboard = ({ onSetupComplete, defaultName = '' }) => {
   const [formData, setFormData] = useState({ candidateName: defaultName, jobDescription: '' });
@@ -57,7 +58,6 @@ const SetupDashboard = ({ onSetupComplete, defaultName = '' }) => {
     submitData.append('resumeFile', resumeFile);
 
     try {
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const res = await axios.post(`${API_BASE}/api/interview/setup`, submitData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });

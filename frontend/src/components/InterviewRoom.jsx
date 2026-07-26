@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Mic, MicOff, Clock, ShieldAlert, PhoneOff, Code } from 'lucide-react';
 import Editor from '@monaco-editor/react';
+import { API_BASE } from '../config';
 
 const InterviewRoom = ({ interviewId, onFinish }) => {
   const [messages, setMessages] = useState([]);
@@ -52,7 +53,6 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
     setLoading(true);
  
     try {
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const res = await axios.post(`${API_BASE}/api/interview/${interviewId}/chat`, {
         content: text || "I have submitted the code.",
         duration,
@@ -187,7 +187,6 @@ const InterviewRoom = ({ interviewId, onFinish }) => {
   useEffect(() => {
     const startInterview = async () => {
       try {
-        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
         const res = await axios.post(`${API_BASE}/api/interview/${interviewId}/start`);
         if (res.data.success) {
           setMessages([{ role: 'assistant', content: res.data.message, displayContent: res.data.message }]);

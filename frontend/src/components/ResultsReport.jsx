@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Play } from 'lucide-react';
+import { API_BASE } from '../config';
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -48,7 +49,6 @@ const ResultsReport = ({ interviewId }) => {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
         const res = await axios.post(`${API_BASE}/api/interview/${interviewId}/evaluate`);
         if (res.data.success) {
           setReport(res.data.evaluation);
