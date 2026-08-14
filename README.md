@@ -190,7 +190,7 @@ Performance Analytics
 * Express.js
 * Firebase Admin SDK
 * Firebase Firestore
-* Groq API (Llama 3.1)
+* Groq API (GPT OSS 20B / Llama 3.3)
 * PDF-Parse
 * Mammoth
 

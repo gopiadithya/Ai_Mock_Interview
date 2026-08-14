@@ -1,5 +1,7 @@
 const { OpenAI } = require('openai');
 
+const MODEL_NAME = process.env.GROQ_MODEL || 'gpt-oss-20b';
+
 let openai = null;
 if (process.env.GROQ_API_KEY) {
   openai = new OpenAI({
@@ -89,7 +91,7 @@ Job Description:
 ${jd}`;
 
     const response = await openai.chat.completions.create({
-      model: "llama-3.1-8b-instant",
+      model: MODEL_NAME,
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" }
     });
@@ -261,7 +263,7 @@ Document Text:
 ${text.slice(0, 3000)}`;
 
     const response = await openai.chat.completions.create({
-      model: "llama-3.1-8b-instant",
+      model: MODEL_NAME,
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" }
     });
@@ -337,7 +339,7 @@ Return your response as a STRICTLY VALID JSON object matching this exact schema:
     }
 
     const response = await openai.chat.completions.create({
-      model: "llama-3.1-8b-instant",
+      model: MODEL_NAME,
       messages: groqMessages,
       response_format: { type: "json_object" }
     });
@@ -373,7 +375,7 @@ Return ONLY valid JSON:
 Transcript:\n${transcript}`;
 
     const response = await openai.chat.completions.create({
-      model: "llama-3.1-8b-instant",
+      model: MODEL_NAME,
       messages: [{ role: "user", content: prompt }]
     });
 
